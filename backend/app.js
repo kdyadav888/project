@@ -14,7 +14,6 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 
 app.use('/api/items', require('./routes/items'));
 app.use('/api/claims', require('./routes/claims'));
-// ... add /users, /admin, /report as needed
 
 app.get('/', (req, res) => res.send('Lost & Found API'));
 

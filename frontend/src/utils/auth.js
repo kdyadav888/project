@@ -16,11 +16,6 @@ export const removeUser = () => {
   localStorage.removeItem('user');
 };
 
-export const isAdmin = () => {
-  const user = getUser();
-  return user?.role === 'admin';
-};
-
 export const isAuthenticated = () => {
   return !!getUser();
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../axiosConfig';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { Card, Button, Badge } from '../components/common';
+import { colors, spacing, typography, transitions } from '../styles/theme';
 
 export default function ItemDetail() {
   const { id } = useParams();
@@ -39,57 +40,142 @@ export default function ItemDetail() {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
-  if (!item) return <div style={styles.container}>Item not found</div>;
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.loadingSpinner}></div>
+      </div>
+    );
+  }
+
+  if (!item) {
+    return (
+      <div style={styles.container}>
+        <Card style={styles.emptyCard}>
+          <h2 style={styles.emptyTitle}>Item Not Found</h2>
+          <p style={styles.emptyText}>This item might have been removed or doesn't exist.</p>
+          <Button variant="primary" onClick={() => navigate(-1)}>Go Back</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const getStatusBadgeVariant = () => {
+    switch (item.status) {
+      case 'active':
+        return 'success';
+      case 'resolved':
+        return 'primary';
+      case 'closed':
+        return 'secondary';
+      default:
+        return 'warning';
+    }
+  };
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>{item.title}</h2>
-        
-        {item.photoUrl && (
-          <img src={item.photoUrl} alt={item.title} style={styles.image} />
-        )}
+      <div style={styles.header}>
+        <div style={styles.titleSection}>
+          <div style={styles.breadcrumbs}>
+            <Button variant="ghost" onClick={() => navigate(-1)} icon="fas fa-arrow-left">
+              Back to {item.type === 'lost' ? 'Lost' : 'Found'} Items
+            </Button>
+          </div>
+          <h1 style={styles.title}>{item.title}</h1>
+          <div style={styles.titleMeta}>
+            <Badge variant={item.type === 'lost' ? 'error' : 'success'}>
+              {item.type.toUpperCase()}
+            </Badge>
+            <Badge variant={getStatusBadgeVariant()}>
+              {item.status.toUpperCase()}
+            </Badge>
+          </div>
+        </div>
+      </div>
 
-        <div style={styles.details}>
-          <p><strong>Status:</strong> {item.status}</p>
-          <p><strong>Category:</strong> {item.category}</p>
-          <p><strong>Location:</strong> {item.location}</p>
-          <p><strong>Date:</strong> {new Date(item.date).toLocaleDateString()}</p>
-          <p><strong>Description:</strong> {item.description}</p>
-          
-          {item.tags && item.tags.length > 0 && (
-            <div style={styles.tags}>
-              {item.tags.map(tag => (
-                <span key={tag} style={styles.tag}>{tag}</span>
-              ))}
+      <div style={styles.content}>
+        <div style={styles.mainContent}>
+          <Card style={styles.imageCard}>
+            {item.photoUrl ? (
+              <img src={item.photoUrl} alt={item.title} style={styles.image} />
+            ) : (
+              <div style={styles.noImage}>
+                <i className="fas fa-image" style={styles.noImageIcon}></i>
+                <p>No image available</p>
+              </div>
+            )}
+          </Card>
+
+          <Card style={styles.detailsCard}>
+            <h3 style={styles.sectionTitle}>Item Details</h3>
+            
+            <div style={styles.detailsGrid}>
+              <div style={styles.detailItem}>
+                <span style={styles.detailLabel}>Category</span>
+                <span style={styles.detailValue}>{item.category}</span>
+              </div>
+              <div style={styles.detailItem}>
+                <span style={styles.detailLabel}>Location</span>
+                <span style={styles.detailValue}>{item.location}</span>
+              </div>
+              <div style={styles.detailItem}>
+                <span style={styles.detailLabel}>Date</span>
+                <span style={styles.detailValue}>
+                  {new Date(item.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div style={styles.detailItem}>
+                <span style={styles.detailLabel}>Description</span>
+                <p style={styles.description}>{item.description}</p>
+              </div>
+              
+              {item.tags && item.tags.length > 0 && (
+                <div style={styles.detailItem}>
+                  <span style={styles.detailLabel}>Tags</span>
+                  <div style={styles.tags}>
+                    {item.tags.map(tag => (
+                      <Badge key={tag} variant="ghost">{tag}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </Card>
         </div>
 
         {item.type === 'lost' && item.status === 'active' && (
-          <div style={styles.claimSection}>
-            <h3>Found this item?</h3>
+          <Card style={styles.claimCard}>
+            <div style={styles.claimHeader}>
+              <h3 style={styles.claimTitle}>Found this item?</h3>
+              <p style={styles.claimSubtitle}>Help return this item to its owner</p>
+            </div>
+
             <form onSubmit={handleSubmitClaim} style={styles.form}>
               <div style={styles.formGroup}>
-                <label>Message to the owner:</label>
+                <label style={styles.label}>Message to the owner</label>
                 <textarea
                   value={claimForm.message}
                   onChange={e => setClaimForm({ ...claimForm, message: e.target.value })}
-                  placeholder="Describe where and when you found it..."
+                  placeholder="Describe where and when you found it, and any identifying details that would help verify your claim..."
                   style={styles.textarea}
                   required
                 />
               </div>
-              <button
+              <Button
                 type="submit"
+                variant="primary"
                 disabled={submitting}
-                style={styles.button}
+                style={styles.submitButton}
               >
                 {submitting ? 'Submitting...' : 'Submit Claim'}
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
         )}
       </div>
     </div>
@@ -98,78 +184,184 @@ export default function ItemDetail() {
 
 const styles = {
   container: {
-    padding: '20px',
-    maxWidth: '800px',
+    padding: spacing.xl,
+    maxWidth: '1200px',
     margin: '0 auto',
   },
-  card: {
-    background: 'white',
-    borderRadius: '8px',
-    padding: '20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  header: {
+    marginBottom: spacing.xl,
+  },
+  titleSection: {
+    marginBottom: spacing.xl,
+  },
+  breadcrumbs: {
+    marginBottom: spacing.md,
   },
   title: {
-    marginTop: 0,
-    marginBottom: '20px',
-    color: '#333',
-    fontSize: '24px',
+    ...typography.h1,
+    color: colors.gray[900],
+    marginBottom: spacing.sm,
+  },
+  titleMeta: {
+    display: 'flex',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  content: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 400px',
+    gap: spacing.xl,
+  },
+  mainContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.xl,
+  },
+  imageCard: {
+    padding: 0,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
-    maxHeight: '400px',
+    height: '400px',
     objectFit: 'cover',
-    borderRadius: '4px',
-    marginBottom: '20px',
   },
-  details: {
-    marginBottom: '20px',
+  noImage: {
+    height: '400px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.gray[100],
+    color: colors.gray[400],
+  },
+  noImageIcon: {
+    fontSize: '48px',
+    marginBottom: spacing.sm,
+  },
+  detailsCard: {
+    padding: spacing.xl,
+  },
+  sectionTitle: {
+    ...typography.h3,
+    color: colors.gray[900],
+    marginBottom: spacing.lg,
+  },
+  detailsGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.lg,
+  },
+  detailItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.xs,
+  },
+  detailLabel: {
+    color: colors.gray[600],
+    fontSize: typography.body2.fontSize,
+    fontWeight: '500',
+  },
+  detailValue: {
+    color: colors.gray[900],
+    fontSize: typography.body1.fontSize,
+  },
+  description: {
+    color: colors.gray[900],
+    fontSize: typography.body1.fontSize,
+    lineHeight: 1.6,
+    margin: 0,
+    whiteSpace: 'pre-line',
   },
   tags: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px',
-    marginTop: '10px',
+    gap: spacing.xs,
   },
-  tag: {
-    background: '#e1e1e1',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '14px',
+  claimCard: {
+    padding: spacing.xl,
+    backgroundColor: colors.gray[50],
+    border: `1px solid ${colors.gray[200]}`,
   },
-  claimSection: {
-    marginTop: '20px',
-    padding: '20px',
-    background: '#f5f5f5',
-    borderRadius: '4px',
+  claimHeader: {
+    marginBottom: spacing.lg,
+  },
+  claimTitle: {
+    ...typography.h3,
+    color: colors.gray[900],
+    marginBottom: spacing.xs,
+  },
+  claimSubtitle: {
+    color: colors.gray[600],
+    fontSize: typography.body2.fontSize,
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '15px',
+    gap: spacing.lg,
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '5px',
+    gap: spacing.xs,
+  },
+  label: {
+    color: colors.gray[700],
+    fontSize: typography.body2.fontSize,
+    fontWeight: '500',
   },
   textarea: {
-    padding: '8px 12px',
-    borderRadius: '4px',
-    border: '1px solid #ddd',
-    minHeight: '100px',
-    fontSize: '16px',
-  },
-  button: {
-    backgroundColor: '#4285F4',
-    color: 'white',
-    border: 'none',
-    padding: '12px',
-    borderRadius: '4px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    ':disabled': {
-      opacity: 0.7,
-      cursor: 'not-allowed',
+    padding: spacing.md,
+    borderRadius: '8px',
+    border: `1px solid ${colors.gray[300]}`,
+    backgroundColor: colors.white,
+    fontSize: typography.body1.fontSize,
+    minHeight: '120px',
+    resize: 'vertical',
+    transition: transitions.default,
+    outline: 'none',
+    '&:focus': {
+      borderColor: colors.primary.main,
+      boxShadow: `0 0 0 2px ${colors.primary.main}25`,
     },
+  },
+  submitButton: {
+    marginTop: spacing.md,
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '50vh',
+  },
+  loadingSpinner: {
+    width: '40px',
+    height: '40px',
+    border: `4px solid ${colors.gray[200]}`,
+    borderTop: `4px solid ${colors.primary.main}`,
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  emptyCard: {
+    padding: spacing.xl,
+    textAlign: 'center',
+  },
+  emptyTitle: {
+    ...typography.h2,
+    color: colors.gray[900],
+    marginBottom: spacing.sm,
+  },
+  emptyText: {
+    color: colors.gray[600],
+    fontSize: typography.body1.fontSize,
+    marginBottom: spacing.lg,
+  },
+  // Animation keyframes for the loading spinner
+  spinner: {
+    animation: 'spin 1s linear infinite',
+    '@keyframes spin': {
+      from: { transform: 'rotate(0deg)' },
+      to: { transform: 'rotate(360deg)' }
+    }
   }
 };

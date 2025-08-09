@@ -3,7 +3,8 @@ import axios from 'axios';
 // Configure axios to use the backend URL
 const instance = axios.create({
   baseURL: 'http://localhost:5000',
-  timeout: 5000, // 5 seconds timeout
+  timeout: 10000, // 10 seconds timeout
+  withCredentials: false, // Changed to false as we're using token auth
 });
 
 // Add a request interceptor

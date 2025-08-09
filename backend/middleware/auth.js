@@ -14,9 +14,4 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-const adminMiddleware = (req, res, next) => {
-  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Not admin' });
-  next();
-};
-
-module.exports = { authMiddleware, adminMiddleware };
+module.exports = { authMiddleware };

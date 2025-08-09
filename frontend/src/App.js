@@ -1,12 +1,13 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import LostDashboard from './pages/LostDashboard';
 import FoundDashboard from './pages/FoundDashboard';
 import Login from './pages/Login';
 import PostLost from './pages/PostLost';
 import PostFound from './pages/PostFound';
 import ItemDetail from './pages/ItemDetail';
-import AdminPanel from './pages/AdminPanel';
 import Navigation from './components/Navigation';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -24,6 +25,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <Navigation />
+        <ToastContainer position="top-right" autoClose={3000} />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard/lost" element={
@@ -51,15 +53,11 @@ function App() {
               <ItemDetail />
             </ProtectedRoute>
           } />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminPanel />
-            </ProtectedRoute>
-          } />
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Navigate to="/dashboard/lost" />} />
         </Routes>
       </Router>
     </ErrorBoundary>
   );
 }
+
 export default App;
